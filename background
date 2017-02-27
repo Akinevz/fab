@@ -1,0 +1,102 @@
+#!/bin/bash
+#/* vim: set syn=sh tabstop=8 nowrap: */
+#if [[ ]]
+BGDIR=${BGDIR:-~/wallpapers}
+BGFILE=$BGDIR/.lastBg
+while [[ $# -gt 0 ]]; do
+	key="$1"
+	case $key in
+		-h|help|--help)
+			echo "Usage: 									"
+			echo "	 background {option[s]}							"
+			echo "                                                                          "
+			echo "Options:                                                                  "
+			echo "	(-d | list | --display): lists previously used wallpapers.              "
+			echo "                                                                          "
+			echo "	(-p | last | --previous): picks last used wallpaper.                    "
+			echo "		Optionally if a number \"n\"                                    "
+			echo "		is supplied it will use \"n\"th previous wallpaper (upto 20).   "
+			echo "                                                                          "
+			echo "	(-s | save | --special): saves current background a special             "
+			echo "                                                                          "
+			echo "	(filename.ext): picks \"filename.ext\".                                 "
+			echo "                                                                          "
+			echo "	no options: picks a random png/jpg from the \$BGDIR ($BGDIR) folder.    "
+			exit
+			;;
+
+		-s|save|--special)
+			shift
+			[[ -n $1 ]] && LAST=$1 || LAST=`tail -n1 $BGDIR/.lastBg` 
+			if [[ -f $LAST && $LAST == *"special"* ]]; then
+				echo "$LAST is already saved"
+			else
+				if [[ -f $LAST ]]; then
+					TARGET="$BGDIR/special"
+					BASE=`basename $LAST`
+					EXT=${BASE#*"."}
+					IDX=0
+					while [[ -e "$TARGET$IDX.$EXT" ]] ; do
+						let IDX++
+					done
+					TARGET="$TARGET$IDX.$EXT"
+					mv "$LAST" "$TARGET"
+					sed -i -e 's|'$LAST'|'$TARGET'|g' $BGDIR/.lastBg
+				else
+					echo "$LAST doesn't exist"
+				fi
+			fi
+			exit
+			;;
+
+		-d|list|--display)
+			tac $BGDIR/.lastBg | nl | tac
+			exit
+			;;
+
+		-p|last|--previous)
+			shift
+			[[ -n $1 ]] && AMT=$1 || AMT=2
+			filebg="`tail -n-$AMT  $BGDIR/.lastBg | head -n1`"
+			;;
+
+		*)
+			filebg+=("$1")
+			;;
+	esac
+	shift
+done
+
+#if target background is not set, then pick a random one.
+if [ -z "$filebg" ]; then
+	filebg=("$BGDIR/"*.{png,jpg})
+fi
+
+#if multiple backgrounds are provided pick a random one.
+if [ ${#filebg[@]} -gt 1 ]; then
+	filebg=${filebg[$RANDOM % ${#filebg[@]} ]}
+fi
+#checks if target background exists
+if [ ! -f "$filebg" ]; then echo "Not Found: $filebg";  exit 1; fi
+
+
+#TODO: announce in gui/echo in console about changing bg
+message="Setting background to $filebg"
+if [[ `tty` == *"/dev/tty"* ]]; then notify-send "<<bg-script>>" "$message"; else echo $message; fi
+
+#add to list of previously used background
+echo "$filebg" >> $BGDIR/.lastBg
+
+#keeps the file 20 lines long
+sed -e :a -e '$q;N;21,$D;ba' $BGDIR/.lastBg > $BGDIR/.cut
+mv $BGDIR/.cut $BGDIR/.lastBg
+
+#sets the actual background
+feh --bg-max $filebg --bg-fill $filebg
+
+#generates the colours
+for term in {urxvt,xterm}; do
+	schemer -t=100 -term=$term $filebg > ~/.colours.$term
+	fixcolours ~/.colours.$term
+	xrdb -merge ~/.colours.$term
+done
