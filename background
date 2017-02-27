@@ -1,6 +1,5 @@
 #!/bin/bash
 #/* vim: set syn=sh tabstop=8 nowrap: */
-#if [[ ]]
 BGDIR=${BGDIR:-~/wallpapers}
 BGFILE=$BGDIR/.lastBg
 while [[ $# -gt 0 ]]; do
@@ -27,7 +26,7 @@ while [[ $# -gt 0 ]]; do
 
 		-s|save|--special)
 			shift
-			[[ -n $1 ]] && LAST=$1 || LAST=`tail -n1 $BGDIR/.lastBg` 
+			[[ -n $1 ]] && LAST=$1 || LAST=`tail -n1 $BGFILE` 
 			if [[ -f $LAST && $LAST == *"special"* ]]; then
 				echo "$LAST is already saved"
 			else
@@ -41,7 +40,7 @@ while [[ $# -gt 0 ]]; do
 					done
 					TARGET="$TARGET$IDX.$EXT"
 					mv "$LAST" "$TARGET"
-					sed -i -e 's|'$LAST'|'$TARGET'|g' $BGDIR/.lastBg
+					sed -i -e 's|'$LAST'|'$TARGET'|g' $BGFILE
 				else
 					echo "$LAST doesn't exist"
 				fi
@@ -50,14 +49,14 @@ while [[ $# -gt 0 ]]; do
 			;;
 
 		-d|list|--display)
-			tac $BGDIR/.lastBg | nl | tac
+			tac $BGFILE | nl | tac
 			exit
 			;;
 
 		-p|last|--previous)
 			shift
 			[[ -n $1 ]] && AMT=$1 || AMT=2
-			filebg="`tail -n-$AMT  $BGDIR/.lastBg | head -n1`"
+			filebg="`tail -n-$AMT  $BGFILE | head -n1`"
 			;;
 
 		*)
@@ -85,11 +84,11 @@ message="Setting background to $filebg"
 if [[ `tty` == *"/dev/tty"* ]]; then notify-send "<<bg-script>>" "$message"; else echo $message; fi
 
 #add to list of previously used background
-echo "$filebg" >> $BGDIR/.lastBg
+echo "$filebg" >> $BGFILE
 
 #keeps the file 20 lines long
-sed -e :a -e '$q;N;21,$D;ba' $BGDIR/.lastBg > $BGDIR/.cut
-mv $BGDIR/.cut $BGDIR/.lastBg
+sed -e :a -e '$q;N;21,$D;ba' $BGFILE > $BGDIR/.cut
+mv $BGDIR/.cut $BGFILE
 
 #sets the actual background
 feh --bg-max $filebg --bg-fill $filebg
