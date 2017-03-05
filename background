@@ -95,7 +95,7 @@ feh --bg-max $filebg --bg-fill $filebg
 
 #generates the colours
 for term in {urxvt,xterm}; do
-	schemer -t=100 -term=$term $filebg > ~/.colours.$term
-	fixcolours ~/.colours.$term
-	xrdb -merge ~/.colours.$term
+	schemer -t=100 -term=$term $filebg > $BGDIR/.colours.$term
+	fixcolours $BGDIR/.colours.$term
+	xrdb -merge $BGDIR/.colours.$term
 done
