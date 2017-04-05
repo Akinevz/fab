@@ -1,5 +1,5 @@
-#MAWP
+#FABI
 ----
-**M**ake **A** **W**allpaper, **P**lease	
+**F**ind **A** **B**ackground **I**mage	
 
-MAWP is a wallpaper manager.
+FABI is a wallpaper manager.
